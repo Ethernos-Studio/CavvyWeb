@@ -1,38 +1,22 @@
-import { useEffect, useRef } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useEffect, useRef, useState } from 'react';
 
-gsap.registerPlugin(ScrollTrigger);
-
-interface SectionDividerProps {
-  glowColor?: string;
-}
-
-export default function SectionDivider({ glowColor = '#8b5cf6' }: SectionDividerProps) {
+export default function SectionDivider({ glowColor = '#8b5cf6' }: { glowColor?: string }) {
   const dividerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     if (!dividerRef.current) return;
-
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        dividerRef.current,
-        { scaleX: 0, opacity: 0 },
-        {
-          scaleX: 1,
-          opacity: 1,
-          duration: 1,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: dividerRef.current,
-            start: 'top 90%',
-            toggleActions: 'play none none reverse',
-          },
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(dividerRef.current!);
         }
-      );
-    });
-
-    return () => ctx.revert();
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(dividerRef.current);
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -44,6 +28,9 @@ export default function SectionDivider({ glowColor = '#8b5cf6' }: SectionDivider
         margin: '0 auto',
         maxWidth: '600px',
         transformOrigin: 'center',
+        opacity: isVisible ? 1 : 0,
+        transform: isVisible ? 'scaleX(1)' : 'scaleX(0)',
+        transition: 'opacity 1s cubic-bezier(0.2, 1, 0.3, 1), transform 1s cubic-bezier(0.2, 1, 0.3, 1)',
       }}
     />
   );

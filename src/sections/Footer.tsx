@@ -38,34 +38,15 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2" style={{ marginBottom: '1.25rem' }}>
-              <div
+              <img
+                src="/CavvyS.svg"
+                alt="Cavvy"
                 style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '6px',
-                  background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  color: '#fff',
-                  fontFamily: "'Playfair Display', serif",
+                  height: '2.5rem',
+                  width: 'auto',
+                  display: 'block',
                 }}
-              >
-                C
-              </div>
-              <h3
-                style={{
-                  fontSize: '22px',
-                  fontFamily: "'Playfair Display', serif",
-                  fontWeight: 700,
-                  color: '#e2e8f0',
-                  letterSpacing: '-0.02em',
-                }}
-              >
-                Cavvy
-              </h3>
+              />
             </div>
             <p
               style={{

@@ -1,8 +1,5 @@
-import { useEffect, useRef } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
+import { useEffect, useRef, useState } from 'react';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 const comparisons = [
   {
@@ -101,148 +98,71 @@ public class Main {
 ];
 
 export default function Philosophy() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
+  const { ref: headerRef, isVisible: headerVisible } = useScrollReveal(0.15);
   const cardsRef = useRef<HTMLDivElement[]>([]);
+  const cardsVisible = useRef<Set<number>>(new Set());
+  const [, forceUpdate] = useState(0);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      if (headerRef.current) {
-        gsap.fromTo(
-          headerRef.current,
-          { opacity: 0, y: 50 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: headerRef.current,
-              start: 'top 85%',
-              toggleActions: 'play none none reverse',
-            },
-          }
-        );
-      }
+    const observers: IntersectionObserver[] = [];
 
-      cardsRef.current.forEach((card, index) => {
-        if (!card) return;
-        gsap.fromTo(
-          card,
-          { opacity: 0, y: 60 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            delay: index * 0.1,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: card,
-              start: 'top 85%',
-              toggleActions: 'play none none reverse',
-            },
+    cardsRef.current.forEach((card, index) => {
+      if (!card) return;
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setTimeout(() => {
+              cardsVisible.current.add(index);
+              forceUpdate((n: number) => n + 1);
+            }, index * 100);
+            observer.unobserve(card);
           }
-        );
-      });
-    }, sectionRef.current!);
+        },
+        { threshold: 0.15 }
+      );
+      observer.observe(card);
+      observers.push(observer);
+    });
 
-    return () => ctx.revert();
+    return () => observers.forEach(o => o.disconnect());
   }, []);
 
   return (
     <section
       id="philosophy"
-      ref={sectionRef}
       className="relative"
-      style={{
-        padding: '160px 0',
-        background: '#0d0d0d',
-      }}
+      style={{ padding: '160px 0', background: '#0d0d0d' }}
     >
-      {/* Ambient glow */}
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          top: '20%',
-          left: '-5%',
-          width: '400px',
-          height: '400px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(139, 92, 246, 0.03) 0%, transparent 70%)',
-        }}
-      />
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          bottom: '10%',
-          right: '-5%',
-          width: '500px',
-          height: '500px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(6, 182, 212, 0.03) 0%, transparent 70%)',
-        }}
-      />
+      <div className="absolute pointer-events-none" style={{ top: '20%', left: '-5%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(139, 92, 246, 0.03) 0%, transparent 70%)' }} />
+      <div className="absolute pointer-events-none" style={{ bottom: '10%', right: '-5%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(6, 182, 212, 0.03) 0%, transparent 70%)' }} />
 
-      <div
-        style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
-          padding: '0 2rem',
-          position: 'relative',
-          zIndex: 1,
-        }}
-      >
-        <div ref={headerRef} style={{ textAlign: 'center', marginBottom: '100px' }}>
-          <p
-            style={{
-              fontSize: '11px',
-              color: '#64748b',
-              textTransform: 'uppercase',
-              letterSpacing: '0.3em',
-              fontFamily: "'JetBrains Mono', monospace",
-              marginBottom: '1.5rem',
-            }}
-          >
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 2rem', position: 'relative', zIndex: 1 }}>
+        <div
+          ref={headerRef}
+          style={{
+            textAlign: 'center',
+            marginBottom: '100px',
+            opacity: headerVisible ? 1 : 0,
+            transform: headerVisible ? 'translateY(0)' : 'translateY(50px)',
+            transition: 'opacity 1s cubic-bezier(0.2, 1, 0.3, 1), transform 1s cubic-bezier(0.2, 1, 0.3, 1)',
+          }}
+        >
+          <p style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.3em', fontFamily: "'JetBrains Mono', monospace", marginBottom: '1.5rem' }}>
             Why Cavvy
           </p>
-          <h2
-            style={{
-              fontSize: 'clamp(32px, 5vw, 52px)',
-              fontFamily: "'Playfair Display', 'Noto Serif SC', serif",
-              fontWeight: 700,
-              lineHeight: 1.2,
-              letterSpacing: '-0.02em',
-            }}
-          >
-            <span
-              style={{
-                background: 'linear-gradient(135deg, #e2e8f0 0%, #94a3b8 50%, #8b5cf6 100%)',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
+          <h2 style={{ fontSize: 'clamp(32px, 5vw, 52px)', fontFamily: "'Playfair Display', 'Noto Serif SC', serif", fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+            <span style={{ background: 'linear-gradient(135deg, #e2e8f0 0%, #94a3b8 50%, #8b5cf6 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               语法即哲学
             </span>
           </h2>
-          <div
-            style={{
-              width: '60px',
-              height: '2px',
-              background: 'linear-gradient(90deg, #8b5cf6, #ec4899)',
-              margin: '1.5rem auto 0',
-              borderRadius: '1px',
-            }}
-          />
+          <div style={{ width: '60px', height: '2px', background: 'linear-gradient(90deg, #8b5cf6, #ec4899)', margin: '1.5rem auto 0', borderRadius: '1px' }} />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '100px' }}>
           {comparisons.map((comp, index) => (
             <div
               key={index}
-              ref={(el) => {
-                if (el) cardsRef.current[index] = el;
-              }}
+              ref={(el) => { if (el) cardsRef.current[index] = el; }}
               style={{
                 background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.8), rgba(13, 13, 13, 0.9))',
                 borderRadius: '24px',
@@ -250,59 +170,21 @@ export default function Philosophy() {
                 overflow: 'hidden',
                 border: '1px solid rgba(255,255,255,0.04)',
                 position: 'relative',
+                opacity: cardsVisible.current.has(index) ? 1 : 0,
+                transform: cardsVisible.current.has(index) ? 'translateY(0)' : 'translateY(60px)',
+                transition: `opacity 0.8s cubic-bezier(0.2, 1, 0.3, 1) ${index * 0.1}s, transform 0.8s cubic-bezier(0.2, 1, 0.3, 1) ${index * 0.1}s`,
               }}
             >
-              {/* Subtle corner accent */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  right: 0,
-                  width: '100px',
-                  height: '100px',
-                  background: 'radial-gradient(circle at top right, rgba(139, 92, 246, 0.05), transparent 70%)',
-                  pointerEvents: 'none',
-                }}
-              />
+              <div style={{ position: 'absolute', top: 0, right: 0, width: '100px', height: '100px', background: 'radial-gradient(circle at top right, rgba(139, 92, 246, 0.05), transparent 70%)', pointerEvents: 'none' }} />
 
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  marginBottom: '2rem',
-                }}
-              >
-                <span
-                  style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: index === 0 ? '#8b5cf6' : index === 1 ? '#ec4899' : '#06b6d4',
-                    opacity: 0.8,
-                  }}
-                />
-                <p
-                  style={{
-                    fontSize: '11px',
-                    color: '#64748b',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.2em',
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontWeight: 500,
-                  }}
-                >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: index === 0 ? '#8b5cf6' : index === 1 ? '#ec4899' : '#06b6d4', opacity: 0.8 }} />
+                <p style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.2em', fontFamily: "'JetBrains Mono', monospace", fontWeight: 500 }}>
                   {comp.label}
                 </p>
               </div>
 
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))',
-                  gap: '1.5rem',
-                }}
-              >
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: '1.5rem' }}>
                 <CodePanel filename="traditional.c" code={comp.c} />
                 <CodePanel filename="modern.cay" code={comp.cay} cavvy />
               </div>
@@ -335,40 +217,16 @@ function CodePanel({ filename, code, cavvy }: { filename: string; code: string; 
         e.currentTarget.style.boxShadow = 'none';
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '6px',
-          padding: '12px 16px',
-          background: 'rgba(255,255,255,0.02)',
-          borderBottom: '1px solid rgba(255,255,255,0.04)',
-        }}
-      >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', display: 'inline-block', opacity: 0.6 }} />
           <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b', display: 'inline-block', opacity: 0.6 }} />
           <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#22c55e', display: 'inline-block', opacity: 0.6 }} />
         </div>
-        <span style={{ fontSize: '11px', color: '#475569', fontFamily: "'JetBrains Mono', monospace" }}>
-          {filename}
-        </span>
+        <span style={{ fontSize: '11px', color: '#475569', fontFamily: "'JetBrains Mono', monospace" }}>{filename}</span>
       </div>
-      <pre
-        style={{
-          padding: '1.5rem',
-          overflow: 'auto',
-          fontSize: '12px',
-          lineHeight: 1.8,
-          fontFamily: "'JetBrains Mono', monospace",
-          margin: 0,
-        }}
-      >
-        <code
-          className={cavvy ? 'shimmer-text' : ''}
-          style={{ color: cavvy ? undefined : '#475569' }}
-        >
+      <pre style={{ padding: '1.5rem', overflow: 'auto', fontSize: '12px', lineHeight: 1.8, fontFamily: "'JetBrains Mono', monospace", margin: 0 }}>
+        <code className={cavvy ? 'shimmer-text' : ''} style={{ color: cavvy ? undefined : '#475569' }}>
           {code}
         </code>
       </pre>

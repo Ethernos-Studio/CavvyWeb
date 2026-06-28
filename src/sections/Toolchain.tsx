@@ -1,8 +1,4 @@
-import { useEffect, useRef } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
+import { useEffect, useRef, useState } from 'react';
 
 const tools = [
   { name: 'cayc', desc: '一站式编译器 (.cay → .exe)', tag: '核心', color: '#8b5cf6' },
@@ -13,152 +9,85 @@ const tools = [
   { name: 'cavly', desc: '包管理器与项目构建工具', tag: '生态', color: '#06b6d4' },
   { name: 'cay-lsp', desc: '语言服务器协议支持', tag: 'IDE', color: '#8b5cf6' },
   { name: 'cay-rcpl', desc: '交互式 RCPL 环境', tag: 'REPL', color: '#ec4899' },
-  { name: 'cay-dt', desc: '文档生成工具', tag: '文档', color: '#06b6d4' },
-  { name: 'cay-dp', desc: 'AST / 解析调试预览', tag: '调试', color: '#8b5cf6' },
+  { name: 'cay-dt', desc: 'Token调试工具', tag: '调试', color: '#d40606ff' },
+  { name: 'cay-dp', desc: 'Parser调试工具', tag: '调试', color: '#d40606ff' },
 ];
 
 export default function Toolchain() {
-  const sectionRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+  const [headerVisible, setHeaderVisible] = useState(false);
   const cardsRef = useRef<HTMLDivElement[]>([]);
+  const cardsVisible = useRef<Set<number>>(new Set());
+  const [, forceUpdate] = useState(0);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      if (headerRef.current) {
-        gsap.fromTo(
-          headerRef.current,
-          { opacity: 0, y: 50 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: headerRef.current,
-              start: 'top 85%',
-              toggleActions: 'play none none reverse',
-            },
-          }
-        );
-      }
+    if (!headerRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setHeaderVisible(true);
+          observer.unobserve(headerRef.current!);
+        }
+      },
+      { threshold: 0.15 }
+    );
+    observer.observe(headerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
-      cardsRef.current.forEach((card, index) => {
-        if (!card) return;
-        gsap.fromTo(
-          card,
-          { opacity: 0, y: 30, scale: 0.95 },
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: 0.6,
-            delay: index * 0.06,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: card,
-              start: 'top 92%',
-              toggleActions: 'play none none reverse',
-            },
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+    cardsRef.current.forEach((card, index) => {
+      if (!card) return;
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setTimeout(() => {
+              cardsVisible.current.add(index);
+              forceUpdate(n => n + 1);
+            }, index * 60);
+            observer.unobserve(card);
           }
-        );
-      });
-    }, sectionRef.current!);
-
-    return () => ctx.revert();
+        },
+        { threshold: 0.1 }
+      );
+      observer.observe(card);
+      observers.push(observer);
+    });
+    return () => observers.forEach(o => o.disconnect());
   }, []);
 
   return (
-    <section
-      id="toolchain"
-      ref={sectionRef}
-      className="relative"
-      style={{
-        padding: '160px 0',
-        background: '#0d0d0d',
-      }}
-    >
-      {/* Ambient glow */}
-      <div
-        className="absolute pointer-events-none pulse-glow"
-        style={{
-          top: '30%',
-          left: '-5%',
-          width: '400px',
-          height: '400px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(139, 92, 246, 0.04) 0%, transparent 70%)',
-        }}
-      />
+    <section id="toolchain" className="relative" style={{ padding: '160px 0', background: '#0d0d0d' }}>
+      <div className="absolute pointer-events-none pulse-glow" style={{ top: '30%', left: '-5%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(139, 92, 246, 0.04) 0%, transparent 70%)' }} />
 
-      <div
-        style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
-          padding: '0 2rem',
-          position: 'relative',
-          zIndex: 1,
-        }}
-      >
-        {/* Section header */}
-        <div ref={headerRef} style={{ textAlign: 'center', marginBottom: '80px' }}>
-          <p
-            style={{
-              fontSize: '11px',
-              color: '#64748b',
-              textTransform: 'uppercase',
-              letterSpacing: '0.3em',
-              fontFamily: "'JetBrains Mono', monospace",
-              marginBottom: '1.5rem',
-            }}
-          >
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 2rem', position: 'relative', zIndex: 1 }}>
+        <div
+          ref={headerRef}
+          style={{
+            textAlign: 'center',
+            marginBottom: '80px',
+            opacity: headerVisible ? 1 : 0,
+            transform: headerVisible ? 'translateY(0)' : 'translateY(50px)',
+            transition: 'opacity 1s cubic-bezier(0.2, 1, 0.3, 1), transform 1s cubic-bezier(0.2, 1, 0.3, 1)',
+          }}
+        >
+          <p style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.3em', fontFamily: "'JetBrains Mono', monospace", marginBottom: '1.5rem' }}>
             Toolchain
           </p>
-          <h2
-            style={{
-              fontSize: 'clamp(32px, 5vw, 52px)',
-              fontFamily: "'Playfair Display', 'Noto Serif SC', serif",
-              fontWeight: 700,
-              lineHeight: 1.2,
-              letterSpacing: '-0.02em',
-              marginBottom: '1.5rem',
-            }}
-          >
-            <span
-              style={{
-                background: 'linear-gradient(135deg, #e2e8f0 0%, #94a3b8 50%, #8b5cf6 100%)',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
+          <h2 style={{ fontSize: 'clamp(32px, 5vw, 52px)', fontFamily: "'Playfair Display', 'Noto Serif SC', serif", fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.02em', marginBottom: '1.5rem' }}>
+            <span style={{ background: 'linear-gradient(135deg, #e2e8f0 0%, #94a3b8 50%, #8b5cf6 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               完整的工具链生态
             </span>
           </h2>
-          <div
-            style={{
-              width: '60px',
-              height: '2px',
-              background: 'linear-gradient(90deg, #8b5cf6, #ec4899)',
-              margin: '0 auto',
-              borderRadius: '1px',
-            }}
-          />
+          <div style={{ width: '60px', height: '2px', background: 'linear-gradient(90deg, #8b5cf6, #ec4899)', margin: '0 auto', borderRadius: '1px' }} />
         </div>
 
-        {/* Tools grid */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 240px), 1fr))',
-            gap: '1rem',
-          }}
-        >
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 240px), 1fr))', gap: '1rem' }}>
           {tools.map((tool, index) => (
             <div
               key={index}
-              ref={(el) => {
-                if (el) cardsRef.current[index] = el;
-              }}
+              ref={(el) => { if (el) cardsRef.current[index] = el; }}
               className="card-glow"
               style={{
                 background: 'linear-gradient(145deg, rgba(20, 20, 20, 0.9), rgba(13, 13, 13, 0.95))',
@@ -168,6 +97,9 @@ export default function Toolchain() {
                 cursor: 'default',
                 position: 'relative',
                 overflow: 'hidden',
+                opacity: cardsVisible.current.has(index) ? 1 : 0,
+                transform: cardsVisible.current.has(index) ? 'translateY(0) scale(1)' : 'translateY(30px) scale(0.95)',
+                transition: `opacity 0.6s cubic-bezier(0.2, 1, 0.3, 1) ${index * 0.06}s, transform 0.6s cubic-bezier(0.2, 1, 0.3, 1) ${index * 0.06}s`,
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = `${tool.color}30`;
@@ -180,59 +112,12 @@ export default function Toolchain() {
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
-              {/* Top accent line */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: '1.5rem',
-                  right: '1.5rem',
-                  height: '2px',
-                  background: `linear-gradient(90deg, ${tool.color}40, transparent)`,
-                  borderRadius: '0 0 2px 2px',
-                }}
-              />
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: '0.75rem',
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: '16px',
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontWeight: 600,
-                    color: '#e2e8f0',
-                  }}
-                >
-                  {tool.name}
-                </span>
-                <span
-                  className="tag"
-                  style={{
-                    fontSize: '10px',
-                    color: tool.color,
-                    background: `${tool.color}12`,
-                    border: `1px solid ${tool.color}20`,
-                  }}
-                >
-                  {tool.tag}
-                </span>
+              <div style={{ position: 'absolute', top: 0, left: '1.5rem', right: '1.5rem', height: '2px', background: `linear-gradient(90deg, ${tool.color}40, transparent)`, borderRadius: '0 0 2px 2px' }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                <span style={{ fontSize: '16px', fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: '#e2e8f0' }}>{tool.name}</span>
+                <span className="tag" style={{ fontSize: '10px', color: tool.color, background: `${tool.color}12`, border: `1px solid ${tool.color}20` }}>{tool.tag}</span>
               </div>
-              <p
-                style={{
-                  fontSize: '13px',
-                  color: '#64748b',
-                  fontFamily: "'Noto Sans SC', sans-serif",
-                  lineHeight: 1.6,
-                }}
-              >
-                {tool.desc}
-              </p>
+              <p style={{ fontSize: '13px', color: '#64748b', fontFamily: "'Noto Sans SC', sans-serif", lineHeight: 1.6 }}>{tool.desc}</p>
             </div>
           ))}
         </div>

@@ -1,8 +1,4 @@
-import { useEffect, useRef } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
+import { useEffect, useRef, useState } from 'react';
 
 const features = [
   {
@@ -76,178 +72,89 @@ const features = [
 ];
 
 export default function IsometricShowcase() {
-  const sectionRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+  const [headerVisible, setHeaderVisible] = useState(false);
   const cardsRef = useRef<HTMLDivElement[]>([]);
+  const cardsVisible = useRef<Set<number>>(new Set());
+  const [, forceUpdate] = useState(0);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      if (headerRef.current) {
-        gsap.fromTo(
-          headerRef.current,
-          { opacity: 0, y: 50 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: headerRef.current,
-              start: 'top 85%',
-              toggleActions: 'play none none reverse',
-            },
-          }
-        );
-      }
+    if (!headerRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setHeaderVisible(true);
+          observer.unobserve(headerRef.current!);
+        }
+      },
+      { threshold: 0.15 }
+    );
+    observer.observe(headerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
-      cardsRef.current.forEach((card, index) => {
-        if (!card) return;
-        gsap.fromTo(
-          card,
-          { opacity: 0, y: 50, scale: 0.95 },
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: 0.7,
-            delay: index * 0.08,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: card,
-              start: 'top 90%',
-              toggleActions: 'play none none reverse',
-            },
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+    cardsRef.current.forEach((card, index) => {
+      if (!card) return;
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setTimeout(() => {
+              cardsVisible.current.add(index);
+              forceUpdate(n => n + 1);
+            }, index * 80);
+            observer.unobserve(card);
           }
-        );
-      });
-    }, sectionRef.current!);
-
-    return () => ctx.revert();
+        },
+        { threshold: 0.1 }
+      );
+      observer.observe(card);
+      observers.push(observer);
+    });
+    return () => observers.forEach(o => o.disconnect());
   }, []);
 
   return (
     <section
       id="showcase"
-      ref={sectionRef}
       className="relative"
-      style={{
-        padding: '160px 0',
-        background: '#0d0d0d',
-        overflow: 'hidden',
-      }}
+      style={{ padding: '160px 0', background: '#0d0d0d', overflow: 'hidden' }}
     >
-      {/* Background ambient */}
-      <div
-        className="absolute pointer-events-none pulse-glow"
-        style={{
-          top: '10%',
-          right: '-10%',
-          width: '500px',
-          height: '500px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, transparent 70%)',
-        }}
-      />
-      <div
-        className="absolute pointer-events-none pulse-glow"
-        style={{
-          bottom: '5%',
-          left: '-10%',
-          width: '400px',
-          height: '400px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(6, 182, 212, 0.05) 0%, transparent 70%)',
-          animationDelay: '2s',
-        }}
-      />
+      <div className="absolute pointer-events-none pulse-glow" style={{ top: '10%', right: '-10%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, transparent 70%)' }} />
+      <div className="absolute pointer-events-none pulse-glow" style={{ bottom: '5%', left: '-10%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(6, 182, 212, 0.05) 0%, transparent 70%)', animationDelay: '2s' }} />
+      <div className="absolute inset-0 pointer-events-none grid-lines" style={{ opacity: 0.3 }} />
 
-      {/* Grid lines */}
-      <div
-        className="absolute inset-0 pointer-events-none grid-lines"
-        style={{ opacity: 0.3 }}
-      />
-
-      <div
-        style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
-          padding: '0 2rem',
-          position: 'relative',
-          zIndex: 1,
-        }}
-      >
-        {/* Section header */}
-        <div ref={headerRef} style={{ textAlign: 'center', marginBottom: '80px' }}>
-          <p
-            style={{
-              fontSize: '11px',
-              color: '#64748b',
-              textTransform: 'uppercase',
-              letterSpacing: '0.3em',
-              fontFamily: "'JetBrains Mono', monospace",
-              marginBottom: '1.5rem',
-            }}
-          >
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 2rem', position: 'relative', zIndex: 1 }}>
+        <div
+          ref={headerRef}
+          style={{
+            textAlign: 'center',
+            marginBottom: '80px',
+            opacity: headerVisible ? 1 : 0,
+            transform: headerVisible ? 'translateY(0)' : 'translateY(50px)',
+            transition: 'opacity 1s cubic-bezier(0.2, 1, 0.3, 1), transform 1s cubic-bezier(0.2, 1, 0.3, 1)',
+          }}
+        >
+          <p style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.3em', fontFamily: "'JetBrains Mono', monospace", marginBottom: '1.5rem' }}>
             Core Strengths
           </p>
-          <h2
-            style={{
-              fontSize: 'clamp(32px, 5vw, 52px)',
-              fontFamily: "'Playfair Display', 'Noto Serif SC', serif",
-              fontWeight: 700,
-              lineHeight: 1.2,
-              letterSpacing: '-0.02em',
-              marginBottom: '1.5rem',
-            }}
-          >
-            <span
-              style={{
-                background: 'linear-gradient(135deg, #e2e8f0 0%, #94a3b8 50%, #8b5cf6 100%)',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
+          <h2 style={{ fontSize: 'clamp(32px, 5vw, 52px)', fontFamily: "'Playfair Display', 'Noto Serif SC', serif", fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.02em', marginBottom: '1.5rem' }}>
+            <span style={{ background: 'linear-gradient(135deg, #e2e8f0 0%, #94a3b8 50%, #8b5cf6 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               编译器级的掌控力
             </span>
           </h2>
-          <div
-            style={{
-              width: '60px',
-              height: '2px',
-              background: 'linear-gradient(90deg, #8b5cf6, #ec4899)',
-              margin: '0 auto',
-              borderRadius: '1px',
-            }}
-          />
-          <p
-            style={{
-              fontSize: '16px',
-              color: '#64748b',
-              fontFamily: "'Noto Sans SC', sans-serif",
-              maxWidth: '560px',
-              margin: '2rem auto 0',
-              lineHeight: 1.8,
-            }}
-          >
+          <div style={{ width: '60px', height: '2px', background: 'linear-gradient(90deg, #8b5cf6, #ec4899)', margin: '0 auto', borderRadius: '1px' }} />
+          <p style={{ fontSize: '16px', color: '#64748b', fontFamily: "'Noto Sans SC', sans-serif", maxWidth: '560px', margin: '2rem auto 0', lineHeight: 1.8 }}>
             从泛型特化到显式内存管理，每个设计决策都指向同一个目标：让你写出既简洁又可控的代码。
           </p>
         </div>
 
-        {/* Feature cards grid */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))',
-            gap: '1.5rem',
-          }}
-        >
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: '1.5rem' }}>
           {features.map((feature, index) => (
             <div
               key={index}
-              ref={(el) => {
-                if (el) cardsRef.current[index] = el;
-              }}
+              ref={(el) => { if (el) cardsRef.current[index] = el; }}
               className="card-glow"
               style={{
                 background: 'linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))',
@@ -259,6 +166,9 @@ export default function IsometricShowcase() {
                 cursor: 'default',
                 position: 'relative',
                 overflow: 'hidden',
+                opacity: cardsVisible.current.has(index) ? 1 : 0,
+                transform: cardsVisible.current.has(index) ? 'translateY(0) scale(1)' : 'translateY(50px) scale(0.95)',
+                transition: `opacity 0.7s cubic-bezier(0.2, 1, 0.3, 1) ${index * 0.08}s, transform 0.7s cubic-bezier(0.2, 1, 0.3, 1) ${index * 0.08}s`,
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = `${feature.color}25`;
@@ -271,59 +181,14 @@ export default function IsometricShowcase() {
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
-              {/* Glow effect on hover */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '-50%',
-                  left: '-50%',
-                  width: '200%',
-                  height: '200%',
-                  background: `radial-gradient(circle at 50% 50%, ${feature.color}08, transparent 50%)`,
-                  pointerEvents: 'none',
-                  opacity: 0,
-                  transition: 'opacity 0.4s ease',
-                }}
-                className="card-glow-bg"
-              />
-
-              {/* Icon */}
-              <div
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '10px',
-                  background: `${feature.color}15`,
-                  color: feature.color,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '1.25rem',
-                  border: `1px solid ${feature.color}20`,
-                }}
-              >
+              <div style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%', background: `radial-gradient(circle at 50% 50%, ${feature.color}08, transparent 50%)`, pointerEvents: 'none', opacity: 0, transition: 'opacity 0.4s ease' }} className="card-glow-bg" />
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${feature.color}15`, color: feature.color, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', border: `1px solid ${feature.color}20` }}>
                 {feature.icon}
               </div>
-
-              <h3
-                style={{
-                  fontSize: '18px',
-                  fontFamily: "'Noto Serif SC', serif",
-                  fontWeight: 600,
-                  color: '#e2e8f0',
-                  marginBottom: '0.75rem',
-                }}
-              >
+              <h3 style={{ fontSize: '18px', fontFamily: "'Noto Serif SC', serif", fontWeight: 600, color: '#e2e8f0', marginBottom: '0.75rem' }}>
                 {feature.title}
               </h3>
-              <p
-                style={{
-                  fontSize: '14px',
-                  lineHeight: 1.8,
-                  color: '#64748b',
-                  fontFamily: "'Noto Sans SC', sans-serif",
-                }}
-              >
+              <p style={{ fontSize: '14px', lineHeight: 1.8, color: '#64748b', fontFamily: "'Noto Sans SC', sans-serif" }}>
                 {feature.desc}
               </p>
             </div>
