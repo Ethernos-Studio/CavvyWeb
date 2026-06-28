@@ -28,14 +28,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Enable pnpm
-        run: corepack enable pnpm
+      - name: Delete lock file
+        run: rm -f package-lock.json
       - name: Install dependencies
-        run: |
-          pnpm approve-builds esbuild
-          pnpm install
+        run: npm install
       - name: Build project
-        run: pnpm run build
+        run: npm run build
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
