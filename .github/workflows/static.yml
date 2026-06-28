@@ -31,7 +31,9 @@ jobs:
       - name: Enable pnpm
         run: corepack enable pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: |
+          pnpm config set ignore-build-scripts false
+          pnpm install
       - name: Build project
         run: pnpm run build
       - name: Setup Pages
