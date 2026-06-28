@@ -31,7 +31,7 @@ jobs:
       - name: Enable pnpm
         run: corepack enable pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --allow-build=esbuild
       - name: Build project
         run: pnpm run build
       - name: Setup Pages
