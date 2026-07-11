@@ -244,7 +244,6 @@ export default function Hero() {
               className="tag tag-purple"
               style={{ fontSize: '10px' }}
             >
-              v5.1.1
             </span>
           </div>
         </div>
