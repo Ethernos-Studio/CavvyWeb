@@ -1,1 +1,29 @@
-/* App-specific styles */
+/* App-specific legacy styles */
+
+.page {
+  padding-bottom: 20px;
+}
+
+.hero-block {
+  margin-bottom: 25px;
+}
+
+.hero-block h2 {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.hero-actions {
+  margin-top: 15px;
+}
+
+.legacy-note {
+  border: 1px dashed #999;
+  background: #ffffee;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.legacy-note p {
+  margin: 0;
+}
