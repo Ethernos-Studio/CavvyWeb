@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
         <div className="code-panel">
           <div className="code-panel-title">hello.cay</div>
           <pre>
-            <code>{`public int main() {
+            <code>{`fn main() -> i32{
     println("Hello, Cavvy!");
     return 0;
 }`}</code>
@@ -52,20 +52,20 @@ Animal* dog_new(char* name) {
         <div className="code-panel">
           <div className="code-panel-title">animal.cay</div>
           <pre>
-            <code>{`public class Animal {
-    public String name;
-    public Animal(String name) {
+            <code>{`class Animal {
+    pub String name;
+    pub Animal(String name) {
         this.name = name;
     }
-    public void speak() {
+    pub fn speak() {
         println("...");
     }
 }
 
-public class Dog extends Animal {
-    public Dog(String name) { super(name); }
+class Dog extends Animal {
+    pub Dog(String name) { super(name); }
     @Override
-    public void speak() {
+    pub fn speak() {
         println(this.name + " says: 汪汪!");
     }
 }`}</code>
@@ -92,14 +92,19 @@ void* list_get(List* l, int i) {
         <div className="code-panel">
           <div className="code-panel-title">box.cay</div>
           <pre>
-            <code>{`public class Box<T> {
-    private T value;
-    public Box(T value) { this.value = value; }
-    public T get() { return this.value; }
+            <code>{`class Box<T> {
+    pub T value;
+    pub Box(T value) { this.value = value; }
+    pub fn get() -> T { return this.value; }
 }
 
-Box<int> box = new Box<int>(42);
-int val = box.get(); // 编译期确定类型`}</code>
+fn main() -> i32{
+    Box<int> box = Box<int>(42);
+    let val = box.get(); // 编译期确定类型
+    println(val);
+    return 0;
+}
+`}</code>
           </pre>
         </div>
       </div>
