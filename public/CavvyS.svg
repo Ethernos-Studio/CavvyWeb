@@ -1,39 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="-20 420 1360 380">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="-20 360 1360 430">
   <defs>
     <style>
-      .cls-1 {
-        fill: #b3a8ce;
-      }
-
-      .cls-2 {
-        fill: #fff;
-      }
-
-      .cls-3 {
-        fill: #e2e8f0;
-      }
-
-      .cls-4 {
-        fill: #b0a4cb;
-      }
-
-      .cls-5 {
-        fill: #f1f5f9;
-      }
-
-      .cls-6 {
-        fill: none;
-        stroke: #e2e8f0;
-        stroke-miterlimit: 10;
-        stroke-width: 10px;
-      }
-
-      .cls-7 {
-        fill: #cec4de;
-      }
-    </style>
-  </defs>
+  .cls-1 { fill: #5b4a8a; }
+  .cls-2 { fill: #0f172a; }
+  .cls-3 { fill: #64748b; }
+  .cls-4 { fill: #6b5b95; }
+  .cls-5 { fill: #94a3b8; }
+  .cls-6 { fill: none; stroke: #475569; stroke-miterlimit: 10; stroke-width: 10px; }
+  .cls-7 { fill: #7c6fa7; }
+</style>  </defs>
   <!-- Generator: Adobe Illustrator 28.7.1, SVG Export Plug-In . SVG Version: 1.2.0 Build 142)  -->
   <g>
     <g id="_图层_1" data-name="图层_1">

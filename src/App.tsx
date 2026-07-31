@@ -13,7 +13,9 @@ function App() {
       <header className="site-header">
         <div className="wrapper">
           <h1>
-            <a href="/">Cavvy</a>
+            <a href="/">
+              <img src="CavvyS.svg" alt="Cavvy" />
+            </a>
           </h1>
           <p className="tagline">编译型面向对象编程语言</p>
           <Navigation />
